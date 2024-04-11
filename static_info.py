@@ -5,14 +5,14 @@ df_losses = pd.read_csv('data/losses.csv')
 df_stats = pd.read_csv('data/stats.csv')
 
 # Preparation for data selection
-type_list = ['All'] + df_losses['type'].unique().tolist()
-status_list = df_losses['status'].unique().tolist()
+type_list = ['All'] + sorted(df_losses['type'].unique().tolist())
+status_list = sorted(df_losses['status'].unique().tolist())
 unit_list = df_losses['unit'].unique().tolist()
 model_list = []
 
 for type in type_list:
     # Extract list of models per vehicle type
-    model_list.append(['All'] + df_losses[df_losses['type'] == type]['model'].unique().tolist())
+    model_list.append(['All'] + sorted(df_losses[df_losses['type'] == type]['model'].unique().tolist()))
 
 
 # For losses over time

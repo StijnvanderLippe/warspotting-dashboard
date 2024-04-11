@@ -13,9 +13,19 @@ from static_info import df_losses, df_stats, type_list, model_list, status_list,
 px.defaults.template = 'plotly_dark'
 
 # Distribution of vehicle losses across types
-fig_stats_pie = px.pie(df_stats, names='type_name', values='counts.losses', title='Russian losses by vehicle type')
+df_losses_by_type = df_losses.groupby('type').size().reset_index()
+# Rename columns to interact with px.pie more easily
+df_losses_by_type.columns = ['category', 'Loss count']
+
+fig_losses_pie = px.pie(df_losses_by_type,
+                        names='category',
+                        values='Loss count',
+                        hover_name='category',
+                        # hover_data={'category': False, 'Loss count': True},
+                        labels={'category': 'Type'}, 
+                        title='Russian vehicle losses by type')
 # Add transparent background
-fig_stats_pie.update_layout({
+fig_losses_pie.update_layout({
     'plot_bgcolor': 'rgba(0, 0, 0, 0)',
     'paper_bgcolor': 'rgba(0, 0, 0, 0)',
     })
@@ -44,16 +54,13 @@ app.layout = dbc.Container(
                dbc.Card(
                    dbc.CardBody([
                        dbc.Row([
-                           create_card_element(dcc.Graph(id='stats-pie', figure=fig_stats_pie))
-                           ]),
-                       html.Br(),
-                       dbc.Row([
                            dbc.Col(create_card_element([html.H3('Type selection'), dcc.Dropdown(id='type-dropdown', options=type_list, value=type_list[0])]), width=6),
                            dbc.Col(create_card_element([html.H3('Model selection'), dcc.Dropdown(id='model-dropdown', options=model_list[0], value=model_list[0][0], disabled=True)]), width=6)
                             ]),
                         html.Br(),
                         dbc.Row([
-                            dbc.Col(create_card_element(dcc.Graph(id='losses-over-time-line', figure=fig_losses_over_time)))
+                            dbc.Col(create_card_element(dcc.Graph(id='losses-pie', figure=fig_losses_pie)), width=6),
+                            dbc.Col(create_card_element(dcc.Graph(id='losses-over-time-line', figure=fig_losses_over_time)), width=6)
                             ])
                         ]), color='dark'
                     )
@@ -78,17 +85,49 @@ def set_model_options(selected_type):
         disabled = False
     return model_options, model_value, disabled
 
+@app.callback(Output('losses-pie', 'figure'),
+              Input('type-dropdown', 'value'))
+def update_pie_chart(selected_type):
+    if selected_type == 'All':
+        df_losses_by_type = df_losses.groupby('type').size().reset_index()
+        labels = {'category': 'Type'},
+        title = 'Russian vehicle losses by type'
+    else:
+        df_filtered = df_losses[df_losses['type'] == selected_type]
+        df_losses_by_type = df_filtered.groupby('model').size().reset_index()
+        labels = {'category': 'Model'},
+        title = f'Russian {selected_type.lower()} vehicle losses by model'
+    
+    df_losses_by_type.columns = ['category', 'Loss count']
+    # Group small categories (< 1% of total)
+    total = df_losses_by_type['Loss count'].sum()
+    df_losses_by_type.loc[df_losses_by_type['Loss count'] < 0.01 * total, 'category'] = 'Other'
+    df_losses_by_type = df_losses_by_type.groupby('category')['Loss count'].sum().reset_index()
+
+    fig_losses_pie = px.pie(df_losses_by_type,
+                        names='category',
+                        values='Loss count',
+                        hover_name='category',
+                        # hover_data={'category': False, 'Loss count': True},
+                        labels=labels,
+                        title=title)
+    fig_losses_pie.update_layout({
+        'plot_bgcolor': 'rgba(0, 0, 0, 0)',
+        'paper_bgcolor': 'rgba(0, 0, 0, 0)',
+        })
+    return fig_losses_pie
+
 @app.callback(Output('losses-over-time-line', 'figure'),
               [Input('type-dropdown', 'value'),
                Input('model-dropdown', 'value')])
 def update_losses_over_time_line(selected_type, selected_model):
     if not selected_type == 'All':
-        filtered_df = df_losses[df_losses['type'] == selected_type]
+        df_filtered = df_losses[df_losses['type'] == selected_type]
         if not selected_model == 'All':
-            filtered_df = filtered_df[filtered_df['model'] == selected_model]
+            df_filtered = df_filtered[df_filtered['model'] == selected_model]
     else:
-        filtered_df = df_losses
-    df_losses_grouped_date = filtered_df.groupby('date').size()
+        df_filtered = df_losses
+    df_losses_grouped_date = df_filtered.groupby('date').size()
     df_losses_grouped_date = reindex_dates(date_range, df_losses_grouped_date)
 
     fig_losses_over_time = px.line(df_losses_grouped_date, 
