@@ -26,20 +26,26 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc_css])
 # Create an app layout
 app.layout = dbc.Container(
     [html.Div([html.H1('Warspotting Russian losses dashboard', style={'textAlign': 'center'}),
-               html.Div(dcc.Graph(figure=fig_stats_pie, id='stats-pie')),
-               html.Div([html.H3('Type selection'), dcc.Dropdown(options=type_list, value=type_list[0], id='type-dropdown'),
-                         html.H3('Model selection'), dcc.Dropdown(options=model_list[0], value=model_list[0][0], id='model-dropdown')])
+               html.Div(dcc.Graph(id='stats-pie', figure=fig_stats_pie)),
+               html.Div([html.H3('Type selection'), dcc.Dropdown(id='type-dropdown', options=type_list, value=type_list[0]), html.Br(),
+                         html.H3('Model selection'), dcc.Dropdown(id='model-dropdown', options=model_list[0], value=model_list[0][0], disabled=True)])
                 ])
     ],
     fluid=True,
     className='dbc')
 
 
-@app.callback(Output('model-dropdown', 'options'),
+@app.callback([Output('model-dropdown', 'options'),
+               Output('model-dropdown', 'disabled')],
               Input('type-dropdown', 'value'))
 def set_model_options(selected_type):
-    index = type_list.index(selected_type)
-    return model_list[index]
+    if selected_type == 'All':
+        model_options = model_list[0]
+        disabled = True
+    else:
+        model_options = model_list[type_list.index(selected_type)]
+        disabled = False
+    return model_options, disabled
 
 # Run the app
 if __name__ == '__main__':
