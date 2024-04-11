@@ -19,6 +19,7 @@ for type in type_list:
 date_range = pd.date_range(df_losses['date'].min(), df_losses['date'].max())
 
 def reindex_dates(date_range, pd_series):
+    # Makes sure a pd_series covers a full date_range if certain dates are missing in the pd_series
     pd_series.index = pd.DatetimeIndex(pd_series.index)
     pd_series_reindex = pd_series.reindex(date_range, fill_value=0)
     return pd_series_reindex

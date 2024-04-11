@@ -88,7 +88,9 @@ def update_losses_over_time_line(selected_type, selected_model):
     df_losses_grouped_date = filtered_df.groupby('date').size()
     df_losses_grouped_date = reindex_dates(date_range, df_losses_grouped_date)
 
-    fig_losses_over_time = px.line(df_losses_grouped_date, title=f'{selected_type} vehicle losses for {selected_model.lower() if selected_model == "All" else selected_model} model{"s" if selected_model == "All" else ""} over time', labels=None)
+    fig_losses_over_time = px.line(df_losses_grouped_date, 
+                                   title=f'{selected_type} vehicle losses for {selected_model.lower() if selected_model == "All" else selected_model} model{"s" if selected_model == "All" else ""} over time',
+                                   labels={'index': 'Date', 'value': 'Loss count'})
     fig_losses_over_time.update_layout({
     'plot_bgcolor': 'rgba(0, 0, 0, 0)',
     'paper_bgcolor': 'rgba(0, 0, 0, 0)',
