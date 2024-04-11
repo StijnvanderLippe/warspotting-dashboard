@@ -21,7 +21,6 @@ fig_losses_pie = px.pie(df_losses_by_type,
                         names='category',
                         values='Loss count',
                         hover_name='category',
-                        # hover_data={'category': False, 'Loss count': True},
                         labels={'category': 'Type'}, 
                         title='Russian vehicle losses by type')
 # Add transparent background
@@ -31,14 +30,15 @@ fig_losses_pie.update_layout({
     })
 
 # Vehicle losses over time
-df_losses_grouped_date = df_losses.groupby('date').size()
-df_losses_grouped_date = reindex_dates(date_range, df_losses_grouped_date)
+# df_losses_grouped_date = df_losses.groupby('date').size()
+df_losses_grouped_date = df_losses.groupby(['date', 'status']).size()
+df_losses_grouped_date = reindex_dates(date_range, df_losses_grouped_date).reset_index()
 
-fig_losses_over_time = px.line(df_losses_grouped_date, title='Vehicle losses over time')
+# fig_losses_over_time = px.line(df_losses_grouped_date, title='Vehicle losses over time')
+fig_losses_over_time = px.area(df_losses_grouped_date, x='date', y=0, color='status')
 fig_losses_over_time.update_layout({
     'plot_bgcolor': 'rgba(0, 0, 0, 0)',
-    'paper_bgcolor': 'rgba(0, 0, 0, 0)',
-    'showlegend': False
+    'paper_bgcolor': 'rgba(0, 0, 0, 0)'
     })
 
 # Create a dash application
@@ -54,8 +54,9 @@ app.layout = dbc.Container(
                dbc.Card(
                    dbc.CardBody([
                        dbc.Row([
-                           dbc.Col(create_card_element([html.H3('Type selection'), dcc.Dropdown(id='type-dropdown', options=type_list, value=type_list[0])]), width=6),
-                           dbc.Col(create_card_element([html.H3('Model selection'), dcc.Dropdown(id='model-dropdown', options=model_list[0], value=model_list[0][0], disabled=True)]), width=6)
+                           dbc.Col(create_card_element([html.H3('Type selection'), dcc.Dropdown(id='type-dropdown', options=type_list, value=type_list[0])]), width=4),
+                           dbc.Col(create_card_element([html.H3('Model selection'), dcc.Dropdown(id='model-dropdown', options=model_list[0], value=model_list[0][0], disabled=True)]), width=4),
+                           dbc.Col(create_card_element([html.H3('Status selection'), dcc.Dropdown(id='status-dropdown', options=status_list, value=status_list[0])]), width=4)
                             ]),
                         html.Br(),
                         dbc.Row([
@@ -108,7 +109,6 @@ def update_pie_chart(selected_type):
                         names='category',
                         values='Loss count',
                         hover_name='category',
-                        # hover_data={'category': False, 'Loss count': True},
                         labels=labels,
                         title=title)
     fig_losses_pie.update_layout({
@@ -127,16 +127,20 @@ def update_losses_over_time_line(selected_type, selected_model):
             df_filtered = df_filtered[df_filtered['model'] == selected_model]
     else:
         df_filtered = df_losses
-    df_losses_grouped_date = df_filtered.groupby('date').size()
-    df_losses_grouped_date = reindex_dates(date_range, df_losses_grouped_date)
+    # df_losses_grouped_date = df_filtered.groupby('date').size()
+    df_losses_grouped_date = df_filtered.groupby(['date', 'status']).size()
+    df_losses_grouped_date = reindex_dates(date_range, df_losses_grouped_date).reset_index()
 
-    fig_losses_over_time = px.line(df_losses_grouped_date, 
+    # fig_losses_over_time = px.line(df_losses_grouped_date, 
+    fig_losses_over_time = px.area(df_losses_grouped_date,
+                                   x='date',
+                                   y=0,
+                                   color='status',
                                    title=f'{selected_type} vehicle losses for {selected_model.lower() if selected_model == "All" else selected_model} model{"s" if selected_model == "All" else ""} over time',
                                    labels={'index': 'Date', 'value': 'Loss count'})
     fig_losses_over_time.update_layout({
     'plot_bgcolor': 'rgba(0, 0, 0, 0)',
-    'paper_bgcolor': 'rgba(0, 0, 0, 0)',
-    'showlegend': False
+    'paper_bgcolor': 'rgba(0, 0, 0, 0)'
     })
     return fig_losses_over_time
 
