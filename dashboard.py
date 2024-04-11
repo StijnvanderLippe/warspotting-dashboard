@@ -33,7 +33,10 @@ fig_losses_over_time.update_layout({
 
 # Create a dash application
 dbc_css = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.2/dbc.min.css")
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc_css])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.SLATE, dbc_css])
+
+def create_card_element(element):
+    return html.Div(dbc.Card(dbc.CardBody(element)))
 
 # Create an app layout
 app.layout = dbc.Container(
@@ -41,18 +44,18 @@ app.layout = dbc.Container(
                dbc.Card(
                    dbc.CardBody([
                        dbc.Row([
-                           dcc.Graph(id='stats-pie', figure=fig_stats_pie)
+                           create_card_element(dcc.Graph(id='stats-pie', figure=fig_stats_pie))
                            ]),
                        html.Br(),
                        dbc.Row([
-                           dbc.Col([html.H3('Type selection'), dcc.Dropdown(id='type-dropdown', options=type_list, value=type_list[0])], width=6),
-                           dbc.Col([html.H3('Model selection'), dcc.Dropdown(id='model-dropdown', options=model_list[0], value=model_list[0][0], disabled=True)], width=6)
+                           dbc.Col(create_card_element([html.H3('Type selection'), dcc.Dropdown(id='type-dropdown', options=type_list, value=type_list[0])]), width=6),
+                           dbc.Col(create_card_element([html.H3('Model selection'), dcc.Dropdown(id='model-dropdown', options=model_list[0], value=model_list[0][0], disabled=True)]), width=6)
                             ]),
                         html.Br(),
                         dbc.Row([
-                            dbc.Col([dcc.Graph(id='losses-over-time-line', figure=fig_losses_over_time)])
+                            dbc.Col(create_card_element(dcc.Graph(id='losses-over-time-line', figure=fig_losses_over_time)))
                             ])
-                        ])
+                        ]), color='dark'
                     )
                 ])
     ],
