@@ -30,12 +30,11 @@ fig_losses_pie.update_layout({
     })
 
 # Vehicle losses over time
-# df_losses_grouped_date = df_losses.groupby('date').size()
 df_losses_grouped_date = df_losses.groupby(['date', 'status']).size()
 df_losses_grouped_date = reindex_dates(date_range, df_losses_grouped_date).reset_index()
+df_losses_grouped_date.columns = ['Date', 'Status', 'Loss count']
 
-# fig_losses_over_time = px.line(df_losses_grouped_date, title='Vehicle losses over time')
-fig_losses_over_time = px.area(df_losses_grouped_date, x='date', y=0, color='status')
+fig_losses_over_time = px.area(df_losses_grouped_date, x='Date', y='Loss count', color='Status')
 fig_losses_over_time.update_layout({
     'plot_bgcolor': 'rgba(0, 0, 0, 0)',
     'paper_bgcolor': 'rgba(0, 0, 0, 0)'
@@ -127,17 +126,18 @@ def update_losses_over_time_line(selected_type, selected_model):
             df_filtered = df_filtered[df_filtered['model'] == selected_model]
     else:
         df_filtered = df_losses
-    # df_losses_grouped_date = df_filtered.groupby('date').size()
+
     df_losses_grouped_date = df_filtered.groupby(['date', 'status']).size()
     df_losses_grouped_date = reindex_dates(date_range, df_losses_grouped_date).reset_index()
+    df_losses_grouped_date.columns = ['Date', 'Status', 'Loss count']
 
     # fig_losses_over_time = px.line(df_losses_grouped_date, 
     fig_losses_over_time = px.area(df_losses_grouped_date,
-                                   x='date',
-                                   y=0,
-                                   color='status',
-                                   title=f'{selected_type} vehicle losses for {selected_model.lower() if selected_model == "All" else selected_model} model{"s" if selected_model == "All" else ""} over time',
-                                   labels={'index': 'Date', 'value': 'Loss count'})
+                                   x='Date',
+                                   y='Loss count',
+                                   color='Status',
+                                   title=f'{selected_type} vehicle losses for {selected_model.lower() if selected_model == "All" else selected_model} model{"s" if selected_model == "All" else ""} over time'
+                                   )
     fig_losses_over_time.update_layout({
     'plot_bgcolor': 'rgba(0, 0, 0, 0)',
     'paper_bgcolor': 'rgba(0, 0, 0, 0)'
