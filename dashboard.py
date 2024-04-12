@@ -6,10 +6,10 @@ from dash import dcc
 from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 import plotly.express as px
-import os
+import folium
 from static_info import df_losses, df_stats, type_list, model_list, status_list, unit_list, date_range, reindex_dates
 
-# Initial plots
+# %% Initial plots
 px.defaults.template = 'plotly_dark'
 
 # Distribution of vehicle losses across types
@@ -40,7 +40,7 @@ fig_losses_over_time.update_layout({
     'paper_bgcolor': 'rgba(0, 0, 0, 0)'
     })
 
-# Create a dash application
+# %% Create a dash application
 dbc_css = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.2/dbc.min.css")
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.SLATE, dbc_css])
 
@@ -69,7 +69,7 @@ app.layout = dbc.Container(
     fluid=True,
     className='dbc')
 
-
+# %% Callback functions
 @app.callback([Output('model-dropdown', 'options'),
                Output('model-dropdown', 'value'),
                Output('model-dropdown', 'disabled')],
@@ -118,24 +118,33 @@ def update_pie_chart(selected_type):
 
 @app.callback(Output('losses-over-time-line', 'figure'),
               [Input('type-dropdown', 'value'),
-               Input('model-dropdown', 'value')])
-def update_losses_over_time_line(selected_type, selected_model):
+               Input('model-dropdown', 'value'),
+               Input('status-dropdown', 'value')])
+def update_losses_over_time_line(selected_type, selected_model, selected_status):
     if not selected_type == 'All':
         df_filtered = df_losses[df_losses['type'] == selected_type]
         if not selected_model == 'All':
             df_filtered = df_filtered[df_filtered['model'] == selected_model]
     else:
         df_filtered = df_losses
+    
+    if not selected_status == 'Any':
+        df_filtered = df_filtered[df_filtered['status'] == selected_status]
 
     df_losses_grouped_date = df_filtered.groupby(['date', 'status']).size()
     df_losses_grouped_date = reindex_dates(date_range, df_losses_grouped_date).reset_index()
     df_losses_grouped_date.columns = ['Date', 'Status', 'Loss count']
 
-    # fig_losses_over_time = px.line(df_losses_grouped_date, 
     fig_losses_over_time = px.area(df_losses_grouped_date,
                                    x='Date',
                                    y='Loss count',
                                    color='Status',
+                                   color_discrete_map={
+                                       "Abandoned": px.colors.qualitative.Plotly[0],
+                                       "Captured": px.colors.qualitative.Plotly[2],
+                                       "Damaged": px.colors.qualitative.Plotly[4],
+                                       "Destroyed": px.colors.qualitative.Plotly[1]
+                                       },
                                    title=f'{selected_type} vehicle losses for {selected_model.lower() if selected_model == "All" else selected_model} model{"s" if selected_model == "All" else ""} over time'
                                    )
     fig_losses_over_time.update_layout({
@@ -144,6 +153,6 @@ def update_losses_over_time_line(selected_type, selected_model):
     })
     return fig_losses_over_time
 
-# Run the app
+# %% Run the app
 if __name__ == '__main__':
     app.run_server(debug=True)
