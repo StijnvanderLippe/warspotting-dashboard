@@ -40,6 +40,10 @@ fig_losses_over_time.update_layout({
     'paper_bgcolor': 'rgba(0, 0, 0, 0)'
     })
 
+# Map of vehicle losses
+ukraine_map = folium.Map(location=[48.379433, 31.16558], zoom_start=6)
+ukraine_map.save('map_temp.html')
+
 # %% Create a dash application
 dbc_css = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.2/dbc.min.css")
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.SLATE, dbc_css])
@@ -61,7 +65,11 @@ app.layout = dbc.Container(
                         dbc.Row([
                             dbc.Col(create_card_element(dcc.Graph(id='losses-pie', figure=fig_losses_pie)), width=6),
                             dbc.Col(create_card_element(dcc.Graph(id='losses-over-time-line', figure=fig_losses_over_time)), width=6)
-                            ])
+                            ]),
+                        html.Br(),
+                        dbc.Row([
+                            dbc.Col(create_card_element(html.Iframe(id='ukraine-map', srcDoc=open('map_temp.html', 'r').read(), width='100%', height='800')))
+                        ])
                         ]), color='dark'
                     )
                 ])
