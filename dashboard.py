@@ -7,10 +7,17 @@ from dash.dependencies import Input, Output
 import dash_bootstrap_components as dbc
 import plotly.express as px
 import folium
+from folium.plugins import MarkerCluster
 from static_info import df_losses, df_stats, type_list, model_list, status_list, unit_list, date_range, reindex_dates
 
 # %% Initial plots
 px.defaults.template = 'plotly_dark'
+color_map_plotly = {
+    'Abandoned': px.colors.qualitative.Plotly[0],
+    'Captured': px.colors.qualitative.Plotly[2],
+    'Damaged': px.colors.qualitative.Plotly[4],
+    'Destroyed': px.colors.qualitative.Plotly[1]
+    }
 
 # Distribution of vehicle losses across types
 df_losses_by_type = df_losses.groupby('type').size().reset_index()
@@ -34,7 +41,7 @@ df_losses_grouped_date = df_losses.groupby(['date', 'status']).size()
 df_losses_grouped_date = reindex_dates(date_range, df_losses_grouped_date).reset_index()
 df_losses_grouped_date.columns = ['Date', 'Status', 'Loss count']
 
-fig_losses_over_time = px.area(df_losses_grouped_date, x='Date', y='Loss count', color='Status')
+fig_losses_over_time = px.area(df_losses_grouped_date, x='Date', y='Loss count', color='Status', color_discrete_map=color_map_plotly)
 fig_losses_over_time.update_layout({
     'plot_bgcolor': 'rgba(0, 0, 0, 0)',
     'paper_bgcolor': 'rgba(0, 0, 0, 0)'
@@ -42,6 +49,23 @@ fig_losses_over_time.update_layout({
 
 # Map of vehicle losses
 ukraine_map = folium.Map(location=[48.379433, 31.16558], zoom_start=6)
+losses_cluster = MarkerCluster().add_to(ukraine_map)
+color_map_folium = {
+    'Abandoned': 'lightblue',
+    'Captured': 'lightgreen',
+    'Damaged': 'orange',
+    'Destroyed': 'red'
+}
+
+for lat, long, model, status in df_losses[['Latitude', 'Longitude', 'model', 'status']].values:
+    try:
+        folium.Marker(location=[lat, long],
+                    popup=f'{status} {model}',
+                    icon=folium.Icon(color=color_map_folium[status], icon="")
+                    ).add_to(losses_cluster)
+    except ValueError:
+        # Location is missing
+        pass
 ukraine_map.save('map_temp.html')
 
 # %% Create a dash application
@@ -147,12 +171,7 @@ def update_losses_over_time_line(selected_type, selected_model, selected_status)
                                    x='Date',
                                    y='Loss count',
                                    color='Status',
-                                   color_discrete_map={
-                                       "Abandoned": px.colors.qualitative.Plotly[0],
-                                       "Captured": px.colors.qualitative.Plotly[2],
-                                       "Damaged": px.colors.qualitative.Plotly[4],
-                                       "Destroyed": px.colors.qualitative.Plotly[1]
-                                       },
+                                   color_discrete_map=color_map_plotly,
                                    title=f'{selected_type} vehicle losses for {selected_model.lower() if selected_model == "All" else selected_model} model{"s" if selected_model == "All" else ""} over time'
                                    )
     fig_losses_over_time.update_layout({
