@@ -48,8 +48,6 @@ fig_losses_over_time.update_layout({
     })
 
 # Map of vehicle losses
-ukraine_map = folium.Map(location=[48.379433, 31.16558], zoom_start=6)
-losses_cluster = MarkerCluster().add_to(ukraine_map)
 color_map_folium = {
     'Abandoned': 'lightblue',
     'Captured': 'lightgreen',
@@ -57,19 +55,24 @@ color_map_folium = {
     'Destroyed': 'red'
 }
 
-for lat, long, model, status in df_losses[['Latitude', 'Longitude', 'model', 'status']].values:
-    try:
-        folium.Marker(location=[lat, long],
-                    popup=f'{status} {model}',
-                    icon=folium.Icon(color=color_map_folium[status], icon="")
-                    ).add_to(losses_cluster)
-    except ValueError:
-        # Location is missing
-        pass
-ukraine_map.save('map_temp.html')
+def plot_and_save_map(df):
+    ukraine_map = folium.Map(location=[48.379433, 31.16558], zoom_start=6)
+    losses_cluster = MarkerCluster().add_to(ukraine_map)
+
+    for lat, long, model, status in df[['Latitude', 'Longitude', 'model', 'status']].values:
+        try:
+            folium.Marker(location=[lat, long],
+                        popup=f'{status} {model}',
+                        icon=folium.Icon(color=color_map_folium[status], icon="")
+                        ).add_to(losses_cluster)
+        except ValueError:
+            # Location is missing
+            pass
+    ukraine_map.save('map_temp.html')
+plot_and_save_map(df_losses)
 
 # %% Create a dash application
-dbc_css = ("https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.2/dbc.min.css")
+dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates@V1.0.2/dbc.min.css"
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.SLATE, dbc_css])
 
 def create_card_element(element):
@@ -102,6 +105,19 @@ app.layout = dbc.Container(
     className='dbc')
 
 # %% Callback functions
+def filter_df(selected_type, selected_model, selected_status):
+    if not selected_type == 'All':
+        df_filtered = df_losses[df_losses['type'] == selected_type]
+        if not selected_model == 'All':
+            df_filtered = df_filtered[df_filtered['model'] == selected_model]
+    else:
+        df_filtered = df_losses
+    
+    if not selected_status == 'Any':
+        df_filtered = df_filtered[df_filtered['status'] == selected_status]
+        
+    return df_filtered
+
 @app.callback([Output('model-dropdown', 'options'),
                Output('model-dropdown', 'value'),
                Output('model-dropdown', 'disabled')],
@@ -153,15 +169,7 @@ def update_pie_chart(selected_type):
                Input('model-dropdown', 'value'),
                Input('status-dropdown', 'value')])
 def update_losses_over_time_line(selected_type, selected_model, selected_status):
-    if not selected_type == 'All':
-        df_filtered = df_losses[df_losses['type'] == selected_type]
-        if not selected_model == 'All':
-            df_filtered = df_filtered[df_filtered['model'] == selected_model]
-    else:
-        df_filtered = df_losses
-    
-    if not selected_status == 'Any':
-        df_filtered = df_filtered[df_filtered['status'] == selected_status]
+    df_filtered = filter_df(selected_type, selected_model, selected_status)
 
     df_losses_grouped_date = df_filtered.groupby(['date', 'status']).size()
     df_losses_grouped_date = reindex_dates(date_range, df_losses_grouped_date).reset_index()
@@ -179,6 +187,17 @@ def update_losses_over_time_line(selected_type, selected_model, selected_status)
     'paper_bgcolor': 'rgba(0, 0, 0, 0)'
     })
     return fig_losses_over_time
+
+
+@app.callback(Output('ukraine-map', 'srcDoc'),
+             [Input('type-dropdown', 'value'),
+             Input('model-dropdown', 'value'),
+             Input('status-dropdown', 'value')])
+def update_map(selected_type, selected_model, selected_status):
+    df_filtered = filter_df(selected_type, selected_model, selected_status)
+    plot_and_save_map(df_filtered)
+    return open('map_temp.html', 'r').read()
+
 
 # %% Run the app
 if __name__ == '__main__':
