@@ -56,7 +56,10 @@ color_map_folium = {
 }
 
 def plot_and_save_map(df):
-    ukraine_map = folium.Map(location=[48.379433, 31.16558], zoom_start=6)
+    ukraine_map = folium.Map(location=[48.379433, 31.16558],
+                             zoom_start=6,
+                             tiles='https://tiles.stadiamaps.com/tiles/alidade_satellite/{z}/{x}/{y}{r}.jpg',
+                             attr='&copy; CNES, Distribution Airbus DS, © Airbus DS, © PlanetObserver (Contains Copernicus Data) | &copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors')
     losses_cluster = MarkerCluster().add_to(ukraine_map)
 
     for lat, long, model, status in df[['Latitude', 'Longitude', 'model', 'status']].values:
