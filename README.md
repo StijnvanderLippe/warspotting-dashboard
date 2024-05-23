@@ -26,7 +26,7 @@ There are two ways to acquire the data files that are used in the dashboard.
 
 ### Using the dashboard
 
-After the necessary data files have been acquired, run `dashboard.py`. This will start app and can then be accessed at localhost:8050.
+After the necessary data files have been acquired, run `dashboard.py`. This will start the app which can then be accessed at localhost:8050.
 
 As a first step you can narrow down what data is being displayed. This includes the type of vehicle loss, the model for that type of vehicle, and additionally the status of the loss (abandoned, captured, damaged, or destroyed).
 
