@@ -1,6 +1,6 @@
 # Visualising Russian losses in the Russo-Ukrainian war
 
-This repository provides a dashboard that can be used to visualise Russian losses in the Russo-Ukrainian war. The data used is gathered by volunteers at [WarSpotting](ukr.warspotting.net), who are doing important work in documenting the enormous scale of losses in this war.
+This repository provides a dashboard that can be used to visualise Russian losses in the Russo-Ukrainian war. The data used is gathered by volunteers at [WarSpotting](https://ukr.warspotting.net), who are doing important work in documenting the enormous scale of losses in this war.
 
 
 ## Examples
@@ -43,5 +43,5 @@ Based on the selection a pie chart is generated that displays the distribution o
 
 ## Credits and attributions
 
-* Data is gathered by volunteers at [WarSpotting](ukr.warspotting.net) and acquired through their [API](https://ukr.warspotting.net/api/docs/)
+* Data is gathered by volunteers at [WarSpotting](https://ukr.warspotting.net) and acquired through their [API](https://ukr.warspotting.net/api/docs/)
 * Satellite imagery: &copy; CNES, Distribution Airbus DS, © Airbus DS, © PlanetObserver (Contains Copernicus Data) | &copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors')
