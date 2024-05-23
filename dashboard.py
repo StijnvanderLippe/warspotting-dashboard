@@ -83,7 +83,7 @@ def create_card_element(element):
 
 # Create an app layout
 app.layout = dbc.Container(
-    [html.Div([html.H1('Warspotting Russian losses dashboard', style={'textAlign': 'center'}),
+    [html.Div([html.H1('WarSpotting Russian losses dashboard', style={'textAlign': 'center'}),
                dbc.Card(
                    dbc.CardBody([
                        dbc.Row([
@@ -204,4 +204,4 @@ def update_map(selected_type, selected_model, selected_status):
 
 # %% Run the app
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server()
